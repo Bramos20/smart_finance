@@ -45,4 +45,8 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function accounts(){ return $this->hasMany(\App\Models\Account::class); }
+    public function allocationRules(){ return $this->hasMany(\App\Models\AllocationRule::class); }
+    public function transactions(){ return $this->hasMany(\App\Models\Transaction::class); }
 }

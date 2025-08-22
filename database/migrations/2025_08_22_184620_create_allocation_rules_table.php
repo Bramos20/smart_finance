@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('account_id')->constrained('accounts')->cascadeOnDelete();
-            $table->unsignedDecimal('percent', 5, 2);
+            $table->decimal('percent', 5, 2)->unsigned();
             $table->boolean('active')->default(true);
             $table->unsignedInteger('priority')->default(100);
             $table->timestamps();
