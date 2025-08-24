@@ -26,11 +26,16 @@ class DepositService {
                 'provider_ref'=>$event->reference,
                 'meta'=>$event->meta,
             ]);
-            $clearing = $user->accounts()->where('slug','clearing')->firstOrFail();
+            $clearing = $user->accounts()->firstOrCreate(
+                ['slug' => 'clearing'],
+                ['name' => 'Clearing', 'type' => 'system', 'currency' => config('app.currency', 'KES')]
+            );
             $rules = $user->allocationRules()->where('active',true)->orderBy('priority')->get();
             $total = (float)$event->amount->amount;
             $sum = (float)$rules->sum('percent');
-            if (abs($sum - 100.0) > 0.001) throw new \RuntimeException('Allocation must sum to 100%');
+            if (abs($sum - 100.0) > 0.001) {
+                throw new \RuntimeException("Allocation must sum to 100% for User ID: {$user->id}. Sum: {$sum}");
+            }
             LedgerEntry::create([
                 'transaction_id'=>$tx->id,
                 'account_id'=>$clearing->id,

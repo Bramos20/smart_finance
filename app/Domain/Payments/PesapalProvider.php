@@ -10,8 +10,7 @@ class PesapalProvider implements PaymentProvider {
     public function initiateDeposit(User $user, Money $amount, array $meta =
     []): ProviderIntent {
         // TODO real API call — dev only redirect
-        return new ProviderIntent('pesapal','redirect', url('/dev-payment?
-        ok=1'));
+        return new ProviderIntent('pesapal','redirect', url('/dev-payment?ok=1'));
     }
     public function handleWebhook(Request $request): ProviderEvent {
         // TODO signature verification & real parsing

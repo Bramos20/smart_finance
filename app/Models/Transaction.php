@@ -7,6 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class Transaction extends Model
 {
     protected $guarded = [];
+
+    protected $casts = [
+        'meta' => 'array',
+    ];
+
     public function user(){ return $this->belongsTo(User::class); }
     public function ledger(){ return $this->hasMany(LedgerEntry::class); }
 }
