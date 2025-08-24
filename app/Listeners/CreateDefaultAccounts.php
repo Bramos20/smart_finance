@@ -11,6 +11,7 @@ class CreateDefaultAccounts {
             ['name'=>'Bills','slug'=>'bills','type'=>'user_bucket'],
             ['name'=>'Savings','slug'=>'savings','type'=>'user_bucket'],
             ['name'=>'Clearing','slug'=>'clearing','type'=>'system'],
+            ['name'=>'System Revenue','slug'=>'system_revenue','type'=>'system'],
         ];
         foreach ($defs as $d) {
             $user->accounts()->firstOrCreate(

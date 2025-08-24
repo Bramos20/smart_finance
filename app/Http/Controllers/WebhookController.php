@@ -20,7 +20,7 @@ class WebhookController extends Controller {
             'payload'=>json_encode($request->all()),
         ]);
         // For first run, process inline to avoid queue setup
-        dispatch_sync(new ProcessWebhook($event->id));
+        ProcessWebhook::dispatch($event->id);
         return response()->json(['ok'=>true]);
     }
 }
