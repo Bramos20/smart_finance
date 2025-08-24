@@ -6,58 +6,71 @@ use App\Models\User;
 use App\Support\Money;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
+use RuntimeException;
 
-class PesapalProvider implements PaymentProvider {
-    // public function initiateDeposit(User $user, Money $amount, array $meta =
-    // []): ProviderIntent {
-    //     // TODO real API call — dev only redirect
-    //     return new ProviderIntent('pesapal','redirect', url('/dev-payment?ok=1'));
-    // }
-    // public function handleWebhook(Request $request): ProviderEvent {
-    //     // TODO signature verification & real parsing
-    //     return new ProviderEvent(
-    //         provider: 'pesapal',
-    //         status: 'succeeded',
-    //         amount: new Money(config('app.currency','KES'), (string)($request->input('amount') ?? '0')),
-    //         reference: $request->input('reference','dev-ref'),
-    //         meta: $request->input('meta',[])
-    //     );
-    // }
+class PesapalProvider implements PaymentProvider
+{
+    protected function getAccessToken(): string
+    {
+        return Cache::remember('pesapal_token', 3500, function () {
+            $response = Http::post(config('services.pesapal.base_url').'/api/Auth/RequestToken', [
+                'consumer_key' => config('services.pesapal.consumer_key'),
+                'consumer_secret' => config('services.pesapal.consumer_secret'),
+            ]);
 
-    public function initiateDeposit(User $user, Money $amount, array $meta = []): ProviderIntent {
-        $url = config('services.pesapal.base_url') . '/api/Transactions/SubmitOrderRequest';
+            if (!$response->ok()) {
+                throw new RuntimeException('Failed to get Pesapal token: '.$response->body());
+            }
+
+            return $response->json()['token'] ?? throw new RuntimeException('No token from Pesapal');
+        });
+    }
+
+    public function initiateDeposit(User $user, Money $amount, array $meta = []): ProviderIntent
+    {
+        $token = $this->getAccessToken();
 
         $payload = [
-            'Amount' => $amount->amount,
-            'Currency' => $amount->currency,
-            'Description' => 'Smart Finance Deposit',
-            'CallbackUrl' => route('webhooks.pesapal'),
-            'Reference' => uniqid('TXN-'),
-            'CustomerEmail' => $user->email,
+            'id' => uniqid(), // unique ID for this order
+            'currency' => $amount->currency,
+            'amount' => (float) $amount->amount,
+            'description' => 'Smart Finance Deposit',
+            'callback_url' => config('services.pesapal.callback_url'),
+            'notification_id' => config('services.pesapal.ipn_id'),
+            'branch' => 'default',
+            'billing_address' => [
+                'email_address' => $user->email,
+                'phone_number' => $user->phone ?? '254700000000',
+                'first_name' => $user->name ?? 'User',
+                'last_name' => 'SmartFinance',
+            ],
         ];
 
-        // Call Pesapal API
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . config('services.pesapal.token')
-        ])->post($url, $payload)->json();
+        $response = Http::withToken($token)
+            ->post(config('services.pesapal.base_url').'/api/Transactions/SubmitOrderRequest', $payload);
 
-        return new ProviderIntent('pesapal', 'redirect', $response['redirect_url'] ?? '/');
-    }
-
-    public function handleWebhook(Request $request): ProviderEvent {
-        // Verify signature
-        $signature = $request->header('X-Signature');
-        if ($signature !== config('services.pesapal.webhook_secret')) {
-            throw new \RuntimeException('Invalid signature');
+        if (!$response->ok()) {
+            throw new RuntimeException('Pesapal error: '.$response->body());
         }
 
-        return new ProviderEvent(
-            provider: 'pesapal',
-            status: $request->input('status','failed'),
-            amount: new Money($request->input('currency','KES'), $request->input('amount','0')),
-            reference: $request->input('reference',''),
-            meta: $request->input('meta',[])
-        );
+        $data = $response->json();
+
+        if (!isset($data['redirect_url'])) {
+            throw new RuntimeException('Pesapal did not return redirect_url. Response: '.json_encode($data));
+        }
+
+        return new ProviderIntent('pesapal', 'redirect', $data['redirect_url']);
     }
 
+    public function handleWebhook(Request $request): ProviderEvent
+    {
+        return new ProviderEvent(
+            provider: 'pesapal',
+            status: $request->input('status', 'failed'),
+            amount: new Money($request->input('currency', 'KES'), $request->input('amount', '0')),
+            reference: $request->input('reference', ''),
+            meta: $request->all()
+        );
+    }
 }

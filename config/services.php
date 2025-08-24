@@ -36,11 +36,12 @@ return [
     ],
 
     'pesapal' => [
-        'base_url'       => env('PESAPAL_BASE_URL', 'https://pay.pesapal.com/v3'),
+        'base_url'       => env('PESAPAL_BASE_URL', 'cybqa.pesapal.com/pesapalv3'),
         'consumer_key'   => env('PESAPAL_CONSUMER_KEY'),
         'consumer_secret'=> env('PESAPAL_CONSUMER_SECRET'),
         'ipn_id'         => env('PESAPAL_IPN_ID'),
-        'webhook_secret' => env('PESAPAL_WEBHOOK_SECRET'),
+        'callback_url'  => env('PESAPAL_CALLBACK_URL'),
+        'webhook_secret'=> env('PESAPAL_WEBHOOK_SECRET', 'demo-secret'),
     ],
 
     'flutterwave' => [

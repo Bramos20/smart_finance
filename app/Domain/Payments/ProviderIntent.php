@@ -2,14 +2,12 @@
 
 namespace App\Domain\Payments;
 
-use App\Support\Money;
-
-final class ProviderEvent {
+final class ProviderIntent
+{
     public function __construct(
         public string $provider,
-        public string $status,
-        public Money $amount,
-        public string $reference,
-        public array $meta = []
-    ){}
+        public string $type,
+        public string $link
+    ) {}
 }
+
