@@ -27,6 +27,6 @@ Route::middleware(['auth'])->group(function(){
     Route::post('/rules', [AllocationController::class,'store'])->name('rules.store');
 });
 
-// Route::post('/webhooks/pesapal', [WebhookController::class, 'pesapal'])->name('webhooks.pesapal');
+// // Route::post('/webhooks/pesapal', [WebhookController::class, 'pesapal'])->name('webhooks.pesapal');
 
-Route::post('/webhooks/pesapal', fn() => response()->json(['ok' => true]))->name('webhooks.pesapal');
+// Route::post('/webhooks/pesapal', fn() => response()->json(['ok' => true]))->name('webhooks.pesapal');
