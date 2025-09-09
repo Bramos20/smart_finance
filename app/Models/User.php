@@ -47,7 +47,25 @@ class User extends Authenticatable
         ];
     }
 
-    public function accounts(){ return $this->hasMany(\App\Models\Account::class); }
-    public function allocationRules(){ return $this->hasMany(\App\Models\AllocationRule::class); }
-    public function transactions(){ return $this->hasMany(\App\Models\Transaction::class); }
+    public function accounts()
+    { 
+        return $this->hasMany(\App\Models\Account::class); 
+    }
+    public function allocationRules()
+    {
+        return $this->hasMany(\App\Models\AllocationRule::class); 
+    }
+    public function transactions()
+    { 
+        return $this->hasMany(\App\Models\Transaction::class); 
+    }
+    public function bills()
+    {
+        return $this->hasMany(\App\Models\UserBill::class);
+    }
+
+    public function roundupSetting()
+    {
+        return $this->hasOne(\App\Models\RoundupSetting::class);
+    }
 }
